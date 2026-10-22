@@ -23,6 +23,10 @@ public class KillerHearing : MonoBehaviour
     [SerializeField] private float detectionInterval = 0.7f;
 
     private KillerController killerController;
+
+    // プレイヤーの隠れ状態
+    private PlayerHidingState hidingState;
+
     private float nextDetectionTime;
 
     private void Awake()
@@ -39,24 +43,42 @@ public class KillerHearing : MonoBehaviour
             );
 
             enabled = false;
+            return;
+        }
+
+        // プレイヤーのロッカー状態を取得
+        hidingState = player.GetComponent<PlayerHidingState>();
+
+        if (hidingState == null)
+        {
+            Debug.LogWarning(
+                "PlayerHidingStateが見つかりません。"
+            );
         }
     }
 
     private void Update()
     {
-        // マイクが使用可能でなければ処理しない
+        // ポーズ中は音を検知しない
+        if (Time.timeScale <= 0f)
+            return;
+
         if (microphone == null ||
             !microphone.IsReady ||
             player == null)
             return;
 
+        // ロッカー内では声を検知しない
+        if (hidingState != null && hidingState.IsHidden)
+            return;
+
         float volume = microphone.Volume01;
 
-        // 必要な音量に達していなければ無視
+        // 最低音量未満なら無視
         if (volume < minimumVolume)
             return;
 
-        // 音量からキラーの聴覚範囲を計算
+        // 声量によって聴覚範囲を決定
         float t = Mathf.InverseLerp(
             minimumVolume,
             loudVolume,
@@ -75,22 +97,21 @@ public class KillerHearing : MonoBehaviour
             player.position
         );
 
-        // 聴覚範囲外なら聞こえない
         if (distance > hearingRange)
             return;
 
-        // 毎フレーム通知しないよう間隔を設ける
+        // 検知間隔を制限
         if (Time.time < nextDetectionTime)
             return;
 
         nextDetectionTime = Time.time +
             Mathf.Max(0.1f, detectionInterval);
 
-        // 声がした時点の位置を通知
+        // 声がした位置をキラーへ通知
         killerController.HearNoise(player.position);
     }
 
-    // シーンビューに最大聴覚範囲を表示
+    // シーンビューで聴覚範囲を表示
     private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.yellow;

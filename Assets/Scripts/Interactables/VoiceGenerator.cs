@@ -71,6 +71,10 @@ public class VoiceGenerator : MonoBehaviour
 
     private void Update()
     {
+        // ゲーム停止中は装置を操作できない
+        if (Time.timeScale <= 0f)
+        return;
+
         // 起動済みの装置は操作しない
         if (isActivated) return;
 

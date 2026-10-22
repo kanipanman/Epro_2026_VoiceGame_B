@@ -15,11 +15,16 @@ public class GameManager : MonoBehaviour
     [SerializeField] private TMP_Text resultText;
 
     [Header("制限時間")]
-    [SerializeField, Min(1f)] private float timeLimit = 180f;
+    [SerializeField, Min(1f)]
+    private float timeLimit = 180f;
+
     [SerializeField] private TMP_Text timerText;
 
-    // ゲームが終了しているか
+    // ゲームの終了状態
     public bool HasEnded { get; private set; }
+
+    // ゲームの一時停止状態
+    public bool IsPaused { get; private set; }
 
     // 現在の残り時間
     public float RemainingTime { get; private set; }
@@ -27,8 +32,11 @@ public class GameManager : MonoBehaviour
     private void Awake()
     {
         Time.timeScale = 1f;
+        AudioListener.pause = false;
 
         HasEnded = false;
+        IsPaused = false;
+
         RemainingTime = timeLimit;
 
         if (resultText != null)
@@ -41,7 +49,7 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
-        // ゲーム終了後はリスタート入力のみ受け付ける
+        // 終了後はRキーでリスタート
         if (HasEnded)
         {
             if (Keyboard.current != null &&
@@ -53,23 +61,30 @@ public class GameManager : MonoBehaviour
             return;
         }
 
-        // 残り時間を減らす
+        // ポーズ中はタイマーを更新しない
+        if (IsPaused)
+            return;
+
+        // 制限時間を減らす
         RemainingTime -= Time.deltaTime;
-        RemainingTime = Mathf.Max(0f, RemainingTime);
+        RemainingTime = Mathf.Max(
+            0f,
+            RemainingTime
+        );
 
         UpdateTimerUI();
 
-        // 制限時間を超えたらゲームオーバー
         if (RemainingTime <= 0f)
         {
             EndGame("時間切れ！");
         }
     }
 
-    // 残り時間を分:秒で表示
+    // タイマーの表示
     private void UpdateTimerUI()
     {
-        if (timerText == null) return;
+        if (timerText == null)
+            return;
 
         int seconds = Mathf.CeilToInt(RemainingTime);
 
@@ -79,11 +94,41 @@ public class GameManager : MonoBehaviour
         timerText.text =
             $"{minutes:00}:{remainingSeconds:00}";
 
-        // 残り30秒以下で赤色に変更
         timerText.color =
             RemainingTime <= 30f
                 ? Color.red
                 : Color.white;
+    }
+
+    // ゲームを一時停止
+    public void PauseGame()
+    {
+        if (HasEnded || IsPaused)
+            return;
+
+        IsPaused = true;
+
+        // ゲーム内の時間を停止
+        Time.timeScale = 0f;
+
+        // BGM・心音なども一時停止
+        AudioListener.pause = true;
+
+        Debug.Log("ゲームを一時停止しました。");
+    }
+
+    // 一時停止を解除
+    public void ResumeGame()
+    {
+        if (HasEnded || !IsPaused)
+            return;
+
+        IsPaused = false;
+
+        Time.timeScale = 1f;
+        AudioListener.pause = false;
+
+        Debug.Log("ゲームを再開しました。");
     }
 
     // キラーに捕まった場合
@@ -92,7 +137,7 @@ public class GameManager : MonoBehaviour
         EndGame("ゲームオーバー");
     }
 
-    // 出口から脱出した場合
+    // 脱出した場合
     public void GameClear()
     {
         EndGame("脱出成功！");
@@ -101,29 +146,29 @@ public class GameManager : MonoBehaviour
     // ゲーム終了時の共通処理
     private void EndGame(string message)
     {
-        if (HasEnded) return;
+        if (HasEnded || IsPaused)
+            return;
 
         HasEnded = true;
 
-        // プレイヤーを操作できないようにする
+        // プレイヤーの移動禁止
         if (player != null)
         {
             player.SetMovementEnabled(false);
         }
 
-        // キラーのAIを停止
+        // キラーAIを停止
         if (killer != null)
         {
             killer.StopAI();
         }
 
-        // キラーの聴覚判定を停止
         if (killerHearing != null)
         {
             killerHearing.enabled = false;
         }
 
-        // 結果を表示
+        // 結果表示
         if (resultText != null)
         {
             resultText.text =
@@ -134,14 +179,14 @@ public class GameManager : MonoBehaviour
 
         Debug.Log(message);
 
-        // ゲーム内時間を停止
         Time.timeScale = 0f;
     }
 
-    // ステージを最初からやり直す
+    // ステージをリスタート
     public void RestartStage()
     {
         Time.timeScale = 1f;
+        AudioListener.pause = false;
 
         Scene currentScene =
             SceneManager.GetActiveScene();
@@ -152,5 +197,6 @@ public class GameManager : MonoBehaviour
     private void OnDestroy()
     {
         Time.timeScale = 1f;
+        AudioListener.pause = false;
     }
 }

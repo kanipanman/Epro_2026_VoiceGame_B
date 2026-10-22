@@ -23,6 +23,13 @@ public class KillerVision : MonoBehaviour
     {
         if (player == null || wallLayers.value == 0)
             return false;
+        
+             // ロッカーに隠れていれば視認できない
+        PlayerHidingState hiding =
+            player.GetComponent<PlayerHidingState>();
+
+        if (hiding != null && hiding.IsHidden)
+            return false;
 
         Vector2 target = player.position;
         Vector2 direction = target - origin;
