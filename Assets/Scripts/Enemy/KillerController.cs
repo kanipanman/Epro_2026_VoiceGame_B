@@ -10,111 +10,163 @@ public class KillerController : MonoBehaviour
     // キラーの行動状態
     public enum KillerState
     {
-        Patrol,       // 巡回
-        Investigate,  // 調査
-        Chase         // 追跡
+        Patrol,
+        Investigate,
+        Chase
     }
 
     [Header("参照")]
     [SerializeField] private Transform player;
 
-    [Header("巡回設定")]
+    [Header("通常巡回")]
     [SerializeField] private Transform[] patrolPoints;
-    [SerializeField] private float patrolSpeed = 2.5f;
 
-    [Header("調査設定")]
-    [SerializeField] private float investigateSpeed = 2.8f;
+    [SerializeField] private float patrolSpeed = 2f;
+
+    [Header("音の調査")]
+    [SerializeField] private float investigateSpeed = 2.7f;
     [SerializeField] private float searchDuration = 2f;
-    [SerializeField] private float investigationTimeout = 12f;
+    [SerializeField] private float investigationTimeout = 8f;
 
-    [Header("追跡設定")]
+    [Header("プレイヤー追跡")]
     [SerializeField] private float chaseSpeed = 4.2f;
     [SerializeField] private float lostSightDelay = 0.6f;
     [SerializeField] private float chaseRepathInterval = 0.4f;
 
     [Header("移動判定")]
-    [SerializeField] private float arrivalDistance = 0.2f;
+    [SerializeField] private float arrivalDistance = 0.45f;
 
+    [Header("Phase 9.1 ランダム巡回")]
+    [SerializeField] private VoiceGenerator[] patrolGenerators;
+
+    [SerializeField, Range(0f, 1f)]
+    private float generatorVisitChance = 0.35f;
+
+    [Header("巡回地点での待機")]
+    [SerializeField] private float minPatrolWait = 0.5f;
+    [SerializeField] private float maxPatrolWait = 1.5f;
+
+    [SerializeField] private float patrolArrivalDistance = 0.65f;
+
+    [Header("移動できない場合の対策")]
+    [SerializeField] private float stuckCheckInterval = 2f;
+    [SerializeField] private float stuckMinMoveDistance = 0.15f;
+
+    [Header("デバッグ")]
+    [SerializeField] private bool showPatrolLog = false;
+
+    // 外部スクリプトから取得する現在の状態
+    public KillerState State { get; private set; }
+        = KillerState.Patrol;
+
+    // キラーが現在向いている方向
+    public Vector2 FacingDirection { get; private set; }
+        = Vector2.down;
+
+    // コンポーネント参照
     private Rigidbody2D rb;
     private KillerPathfinder2D pathfinder;
     private KillerVision vision;
 
-    // 現在の行動状態
-    public KillerState State { get; private set; }
-        = KillerState.Patrol;
+    // AIの停止状態
+    private bool aiStopped;
 
-    // キラーの向いている方向
-    public Vector2 FacingDirection { get; private set; }
-        = Vector2.down;
-
-    private int patrolIndex;
-
-    // 最後に聞いた・見た位置
-    private Vector2 lastKnownPosition;
-
-    private bool reachedInvestigationPoint;
-    private float searchTimer;
-    private float investigationTimer;
-    private float lostSightTimer;
-
+    // =========================================
     // 経路探索
-    private List<Vector2> currentPath = new List<Vector2>();
+    // =========================================
+
+    private List<Vector2> currentPath =
+        new List<Vector2>();
+
     private int pathIndex;
     private bool needsNewPath = true;
     private float nextPathRetryTime;
+
+    // =========================================
+    // ランダム巡回
+    // =========================================
+
+    private Transform currentPatrolTarget;
+    private Transform previousPatrolTarget;
+
+    private bool lastTargetWasGenerator;
+
+    private bool isPatrolWaiting;
+    private float patrolWaitEndTime;
+    private float patrolLookTime;
+    private bool hasLookedAround;
+
+    // 移動停止の検出
+    private float lastMovementCheckTime;
+    private Vector2 lastMovementCheckPosition;
+
+    // =========================================
+    // 調査・追跡
+    // =========================================
+
+    private Vector2 investigatePosition;
+    private float investigationStartTime;
+    private float searchStartTime = -1f;
+
+    private Vector2 lastSeenPosition;
+    private float lastSeenTime;
     private float nextChaseRepathTime;
+
+    // =========================================
+    // 初期化
+    // =========================================
 
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         pathfinder = GetComponent<KillerPathfinder2D>();
         vision = GetComponent<KillerVision>();
+
+        State = KillerState.Patrol;
+        aiStopped = false;
     }
 
     private void Start()
     {
-        if (player == null)
-        {
-            Debug.LogError($"{name}: Playerが未設定です。");
-            enabled = false;
-        }
+        // Phase 9のランダム配置が完了した位置を基準にする
+        lastMovementCheckPosition = rb.position;
+        lastMovementCheckTime = Time.time;
     }
+
+    // =========================================
+    // メインAI処理
+    // =========================================
 
     private void FixedUpdate()
     {
-        // プレイヤーが視界に入っているか確認
-        bool canSeePlayer = vision.CanSeePlayer(
-            rb.position,
-            FacingDirection
-        );
+        // ゲーム終了・ポーズ中は更新しない
+        if (aiStopped || Time.timeScale <= 0f)
+            return;
 
+        // プレイヤーを視認できるか判定
+        bool canSeePlayer = false;
+
+        if (player != null && vision != null)
+        {
+            canSeePlayer = vision.CanSeePlayer(
+                rb.position,
+                FacingDirection
+            );
+        }
+
+        // プレイヤーを発見した場合
         if (canSeePlayer)
         {
-            // 視認している間は最後の目撃位置を更新
-            lastKnownPosition = player.position;
-            lostSightTimer = 0f;
+            lastSeenPosition = player.position;
+            lastSeenTime = Time.time;
 
             if (State != KillerState.Chase)
             {
                 StartChase();
             }
         }
-        else if (State == KillerState.Chase)
-        {
-            // 見失った時間を計測
-            lostSightTimer += Time.fixedDeltaTime;
 
-            if (lostSightTimer >= lostSightDelay)
-            {
-                Debug.Log(
-                    "キラー：プレイヤーを見失った"
-                );
-
-                BeginInvestigation(lastKnownPosition);
-            }
-        }
-
-        // 現在の状態に応じた処理
+        // 現在の状態に応じて行動
         switch (State)
         {
             case KillerState.Patrol:
@@ -122,311 +174,607 @@ public class KillerController : MonoBehaviour
                 break;
 
             case KillerState.Investigate:
-                UpdateInvestigation();
+                UpdateInvestigate();
                 break;
 
             case KillerState.Chase:
-                UpdateChase();
+                UpdateChase(canSeePlayer);
                 break;
         }
     }
 
-    // 通常時の巡回処理
+    // =========================================
+    // Phase 9.1 ランダム巡回
+    // =========================================
+
     private void UpdatePatrol()
     {
         if (patrolPoints == null ||
             patrolPoints.Length == 0)
-            return;
-
-        Transform target = patrolPoints[patrolIndex];
-
-        if (target == null)
         {
-            NextPatrolPoint();
             return;
         }
 
-        if (MoveAlongPath(target.position, patrolSpeed))
+        // 巡回地点で待機中
+        if (isPatrolWaiting)
+        {
+            // 待機中に一度だけ向きを変更
+            if (!hasLookedAround &&
+                Time.time >= patrolLookTime)
+            {
+                LookAround();
+                hasLookedAround = true;
+            }
+
+            // 待機時間が終わるまで停止
+            if (Time.time < patrolWaitEndTime)
+                return;
+
+            isPatrolWaiting = false;
+
+            // 新しい巡回先を決定
+            NextPatrolPoint();
+        }
+
+        // 最初の巡回先を選ぶ
+        if (currentPatrolTarget == null)
         {
             NextPatrolPoint();
+        }
+
+        if (currentPatrolTarget == null)
+            return;
+
+        Vector2 targetPosition =
+            currentPatrolTarget.position;
+
+        float distance = Vector2.Distance(
+            rb.position,
+            targetPosition
+        );
+
+        // 巡回地点に到着
+        if (distance <= patrolArrivalDistance)
+        {
+            StartPatrolWaiting();
+            return;
+        }
+
+        // 移動できているか確認
+        if (Time.time - lastMovementCheckTime >=
+            stuckCheckInterval)
+        {
+            float movedDistance = Vector2.Distance(
+                rb.position,
+                lastMovementCheckPosition
+            );
+
+            // ほとんど移動していない
+            if (movedDistance < stuckMinMoveDistance)
+            {
+                if (showPatrolLog)
+                {
+                    Debug.Log(
+                        "キラー：移動できないため巡回先を変更"
+                    );
+                }
+
+                NextPatrolPoint();
+                return;
+            }
+
+            lastMovementCheckPosition = rb.position;
+            lastMovementCheckTime = Time.time;
+        }
+
+        // 経路探索で目的地へ移動
+        MoveAlongPath(
+            targetPosition,
+            patrolSpeed
+        );
+    }
+
+    // 次の巡回先をランダムに決定
+    private void NextPatrolPoint()
+    {
+        List<Transform> candidates =
+            new List<Transform>();
+
+        bool visitingGenerator = false;
+
+        // 一定確率で未起動の装置を確認
+        if (!lastTargetWasGenerator &&
+            Random.value < generatorVisitChance &&
+            patrolGenerators != null)
+        {
+            foreach (VoiceGenerator generator
+                in patrolGenerators)
+            {
+                if (generator == null ||
+                    generator.IsActivated)
+                {
+                    continue;
+                }
+
+                Transform target = generator.transform;
+
+                // 同じ場所を連続で選ばない
+                if (target == previousPatrolTarget)
+                    continue;
+
+                // 近すぎる場所は選ばない
+                if (Vector2.Distance(
+                    rb.position,
+                    target.position) < 1f)
+                {
+                    continue;
+                }
+
+                candidates.Add(target);
+            }
+
+            visitingGenerator = candidates.Count > 0;
+        }
+
+        // 装置を選ばなかった場合は通常巡回
+        if (candidates.Count == 0)
+        {
+            foreach (Transform point in patrolPoints)
+            {
+                if (point == null)
+                    continue;
+
+                if (point == previousPatrolTarget)
+                    continue;
+
+                if (Vector2.Distance(
+                    rb.position,
+                    point.position) < 1f)
+                {
+                    continue;
+                }
+
+                candidates.Add(point);
+            }
+        }
+
+        // 候補がない場合は距離条件を解除
+        if (candidates.Count == 0)
+        {
+            foreach (Transform point in patrolPoints)
+            {
+                if (point != null &&
+                    point != previousPatrolTarget)
+                {
+                    candidates.Add(point);
+                }
+            }
+        }
+
+        // 最後の候補
+        if (candidates.Count == 0)
+        {
+            foreach (Transform point in patrolPoints)
+            {
+                if (point != null)
+                    candidates.Add(point);
+            }
+        }
+
+        if (candidates.Count == 0)
+        {
+            currentPatrolTarget = null;
+            return;
+        }
+
+        // ランダム選択
+        int randomIndex = Random.Range(
+            0,
+            candidates.Count
+        );
+
+        currentPatrolTarget = candidates[randomIndex];
+
+        // 同じ目的地を連続選択しないために記録
+        previousPatrolTarget = currentPatrolTarget;
+
+        lastTargetWasGenerator = visitingGenerator;
+
+        // 移動停止検出を初期化
+        ResetMovementCheck();
+
+        // 目的地を変更したため経路を再計算
+        ResetPath();
+
+        if (showPatrolLog)
+        {
+            Debug.Log(
+                $"キラーの次の巡回先：{currentPatrolTarget.name}"
+            );
         }
     }
 
-    // 次の巡回地点に変更
-    private void NextPatrolPoint()
+    // 巡回地点で待機を開始
+    private void StartPatrolWaiting()
     {
-        patrolIndex =
-            (patrolIndex + 1) % patrolPoints.Length;
+        float minWait = Mathf.Min(
+            minPatrolWait,
+            maxPatrolWait
+        );
+
+        float maxWait = Mathf.Max(
+            minPatrolWait,
+            maxPatrolWait
+        );
+
+        float waitTime = Random.Range(
+            minWait,
+            maxWait
+        );
+
+        isPatrolWaiting = true;
+
+        patrolWaitEndTime =
+            Time.time + waitTime;
+
+        patrolLookTime =
+            Time.time + waitTime * 0.5f;
+
+        hasLookedAround = false;
+
+        ResetPath();
+
+        if (showPatrolLog)
+        {
+            Debug.Log(
+                $"キラー：巡回地点に到着。" +
+                $"{waitTime:F1}秒待機"
+            );
+        }
+    }
+
+    // 巡回地点でランダムな方向を見る
+    private void LookAround()
+    {
+        int direction = Random.Range(0, 4);
+
+        switch (direction)
+        {
+            case 0:
+                FacingDirection = Vector2.up;
+                break;
+
+            case 1:
+                FacingDirection = Vector2.down;
+                break;
+
+            case 2:
+                FacingDirection = Vector2.left;
+                break;
+
+            case 3:
+                FacingDirection = Vector2.right;
+                break;
+        }
+    }
+
+    // 移動チェックを初期化
+    private void ResetMovementCheck()
+    {
+        lastMovementCheckPosition = rb.position;
+        lastMovementCheckTime = Time.time;
+    }
+
+    // =========================================
+    // 声による調査
+    // =========================================
+
+    // KillerHearingなどから呼び出される
+    public void HearNoise(Vector2 noisePosition)
+    {
+        if (aiStopped || Time.timeScale <= 0f)
+            return;
+
+        // 追跡中は声による調査に切り替えない
+        if (State == KillerState.Chase)
+            return;
+
+        investigatePosition = noisePosition;
+
+        // 巡回から調査へ切り替える
+        if (State != KillerState.Investigate)
+        {
+            State = KillerState.Investigate;
+
+            investigationStartTime = Time.time;
+        }
+
+        // 新しい音の位置へ向かう
+        searchStartTime = -1f;
+
+        isPatrolWaiting = false;
 
         ResetPath();
     }
 
-    // プレイヤーを発見したときの処理
+    // 調査中の行動
+    private void UpdateInvestigate()
+    {
+        // 調査が長引きすぎた場合
+        if (Time.time - investigationStartTime >=
+            investigationTimeout)
+        {
+            ReturnToPatrol();
+            return;
+        }
+
+        float distance = Vector2.Distance(
+            rb.position,
+            investigatePosition
+        );
+
+        // 音の発生地点に到着
+        if (distance <= arrivalDistance)
+        {
+            if (searchStartTime < 0f)
+            {
+                searchStartTime = Time.time;
+            }
+
+            // 周囲を調査する
+            if (Time.time - searchStartTime >=
+                searchDuration)
+            {
+                ReturnToPatrol();
+            }
+
+            return;
+        }
+
+        // 音がした場所へ移動
+        MoveAlongPath(
+            investigatePosition,
+            investigateSpeed
+        );
+    }
+
+    // =========================================
+    // プレイヤー追跡
+    // =========================================
+
+    // プレイヤーを発見
     private void StartChase()
     {
         State = KillerState.Chase;
 
-        ResetPath();
+        isPatrolWaiting = false;
+
         nextChaseRepathTime = 0f;
 
-        Debug.Log("キラー：プレイヤーを発見！追跡開始");
+        ResetPath();
+
+        if (showPatrolLog)
+        {
+            Debug.Log("キラー：プレイヤーを発見！");
+        }
     }
 
-    // 追跡中の処理
-    private void UpdateChase()
+    // 追跡中の行動
+    private void UpdateChase(bool canSeePlayer)
     {
-        // プレイヤーの移動に合わせて経路を更新
+        if (player == null)
+        {
+            ReturnToPatrol();
+            return;
+        }
+
+        // 一定時間見失ったら最後の位置を調査
+        if (!canSeePlayer &&
+            Time.time - lastSeenTime >= lostSightDelay)
+        {
+            StartInvestigatingLastSeen();
+            return;
+        }
+
+        // 視認中は現在地、見失った直後は最終位置
+        Vector2 targetPosition = canSeePlayer
+            ? (Vector2)player.position
+            : lastSeenPosition;
+
+        // プレイヤーの移動に合わせて経路を再計算
         if (Time.time >= nextChaseRepathTime)
         {
             ResetPath();
 
-            nextChaseRepathTime = Time.time +
-                Mathf.Max(0.1f, chaseRepathInterval);
+            nextChaseRepathTime =
+                Time.time + Mathf.Max(
+                    0.1f,
+                    chaseRepathInterval
+                );
         }
 
-        // 最後に目撃した位置へ移動
         MoveAlongPath(
-            lastKnownPosition,
+            targetPosition,
             chaseSpeed
         );
     }
 
-    // 声を聞いたときの処理
-    // KillerHearingから呼び出される
-    public void HearNoise(Vector2 noisePosition)
-    {
-        // 追跡中は視覚情報を優先
-        if (State == KillerState.Chase)
-            return;
-
-        // 同じ場所を調査中なら経路は変更しない
-        if (State == KillerState.Investigate &&
-            Vector2.Distance(
-                lastKnownPosition,
-                noisePosition
-            ) < 0.5f)
-        {
-            if (reachedInvestigationPoint)
-            {
-                searchTimer = searchDuration;
-            }
-
-            return;
-        }
-
-        Debug.Log("キラー：声を検知！");
-
-        BeginInvestigation(noisePosition);
-    }
-
-    // 調査状態に切り替える
-    private void BeginInvestigation(Vector2 position)
+    // 最後に見かけた場所を調査
+    private void StartInvestigatingLastSeen()
     {
         State = KillerState.Investigate;
 
-        lastKnownPosition = position;
-        reachedInvestigationPoint = false;
-
-        searchTimer = searchDuration;
-        investigationTimer = investigationTimeout;
+        investigatePosition = lastSeenPosition;
+        investigationStartTime = Time.time;
+        searchStartTime = -1f;
 
         ResetPath();
 
-        Debug.Log("キラー：調査開始");
-    }
-
-    // 最後に聞いた・見た場所へ向かう
-    private void UpdateInvestigation()
-    {
-        // 到達できない場所で止まり続けるのを防止
-        investigationTimer -= Time.fixedDeltaTime;
-
-        if (investigationTimer <= 0f)
+        if (showPatrolLog)
         {
-            ReturnToPatrol();
-            return;
-        }
-
-        if (!reachedInvestigationPoint)
-        {
-            bool arrived = MoveAlongPath(
-                lastKnownPosition,
-                investigateSpeed
+            Debug.Log(
+                "キラー：プレイヤーを見失ったため調査へ移行"
             );
-
-            if (arrived)
-            {
-                reachedInvestigationPoint = true;
-                searchTimer = searchDuration;
-
-                Debug.Log("キラー：調査地点に到着");
-            }
-
-            return;
-        }
-
-        // 到着した場所で一定時間待つ
-        searchTimer -= Time.fixedDeltaTime;
-
-        if (searchTimer <= 0f)
-        {
-            ReturnToPatrol();
         }
     }
 
-    // 調査終了後、巡回に戻る
+    // =========================================
+    // 巡回へ復帰
+    // =========================================
+
     private void ReturnToPatrol()
     {
         State = KillerState.Patrol;
 
-        // 現在位置に最も近い巡回地点を探す
+        isPatrolWaiting = false;
+        searchStartTime = -1f;
+
+        ResetPath();
+        ResetMovementCheck();
+
+        // 最も近い巡回地点を探す
+        Transform nearestPoint = null;
         float nearestDistance = float.MaxValue;
 
         if (patrolPoints != null)
         {
-            for (int i = 0; i < patrolPoints.Length; i++)
+            foreach (Transform point in patrolPoints)
             {
-                if (patrolPoints[i] == null)
+                if (point == null)
                     continue;
 
                 float distance = Vector2.Distance(
                     rb.position,
-                    patrolPoints[i].position
+                    point.position
                 );
 
                 if (distance < nearestDistance)
                 {
                     nearestDistance = distance;
-                    patrolIndex = i;
+                    nearestPoint = point;
                 }
             }
         }
 
-        ResetPath();
+        currentPatrolTarget = nearestPoint;
 
-        Debug.Log("キラー：巡回再開");
+        previousPatrolTarget = nearestPoint;
+        lastTargetWasGenerator = false;
+
+        if (showPatrolLog)
+        {
+            Debug.Log(
+                "キラー：調査・追跡終了。巡回へ復帰"
+            );
+        }
     }
 
-    // 経路探索を利用した移動
-    private bool MoveAlongPath(Vector2 target, float speed)
-    {
-        // すでに目的地にいる場合
-        if (Vector2.Distance(
-            rb.position, target) <= arrivalDistance)
-        {
-            return true;
-        }
+    // =========================================
+    // 経路探索による移動
+    // =========================================
 
-        // 必要に応じて経路を計算する
+    private void MoveAlongPath(
+        Vector2 targetPosition,
+        float moveSpeed)
+    {
+        if (pathfinder == null)
+            return;
+
+        // 経路が必要な場合は計算
         if (needsNewPath &&
             Time.time >= nextPathRetryTime)
         {
-            currentPath = pathfinder.FindPath(
-                rb.position, target
-            );
+            List<Vector2> result =
+                pathfinder.FindPath(
+                    rb.position,
+                    targetPosition
+                );
+
+            currentPath = result ??
+                new List<Vector2>();
 
             pathIndex = 0;
             needsNewPath = false;
 
-            // 経路が見つからなかった場合
+            // 経路が見つからない場合は再試行
             if (currentPath.Count == 0)
             {
-                nextPathRetryTime = Time.time + 1f;
                 needsNewPath = true;
+                nextPathRetryTime = Time.time + 0.5f;
+                return;
             }
         }
 
-        if (needsNewPath)
-            return false;
+        if (currentPath.Count == 0)
+            return;
 
-        // 到達済みの経由地点を飛ばす
-        while (pathIndex < currentPath.Count &&
-               Vector2.Distance(
-                   rb.position,
-                   currentPath[pathIndex]
-               ) <= arrivalDistance)
+        // すでに通過した経路点をスキップ
+        while (pathIndex < currentPath.Count)
         {
+            float distance = Vector2.Distance(
+                rb.position,
+                currentPath[pathIndex]
+            );
+
+            if (distance > 0.15f)
+                break;
+
             pathIndex++;
         }
 
-        // 全経由地点を通過した場合
+        // 最後の経路点まで進んだ場合
         if (pathIndex >= currentPath.Count)
         {
+            // 目的地がまだ少し離れていれば近づく
             if (Vector2.Distance(
-                rb.position, target) <= 0.5f)
+                rb.position,
+                targetPosition) > arrivalDistance)
             {
-                return true;
+                needsNewPath = true;
             }
 
-            ResetPath();
-            return false;
+            return;
         }
 
-        // 次の経由地点へ移動
-        Vector2 nextPosition = Vector2.MoveTowards(
+        Vector2 nextPosition = currentPath[pathIndex];
+
+        Vector2 direction =
+            nextPosition - rb.position;
+
+        if (direction.sqrMagnitude < 0.0001f)
+            return;
+
+        // 移動方向を更新
+        FacingDirection = direction.normalized;
+
+        // Rigidbody2Dで移動
+        Vector2 newPosition = Vector2.MoveTowards(
             rb.position,
-            currentPath[pathIndex],
-            speed * Time.fixedDeltaTime
+            nextPosition,
+            moveSpeed * Time.fixedDeltaTime
         );
 
-        // 移動方向を視線方向にも反映する
-        Vector2 direction = nextPosition - rb.position;
-
-        if (direction.sqrMagnitude > 0.0001f)
-        {
-            FacingDirection = direction.normalized;
-        }
-
-        rb.MovePosition(nextPosition);
-
-        return false;
+        rb.MovePosition(newPosition);
     }
 
-    // 移動経路を初期化
+    // 経路情報を初期化
     private void ResetPath()
     {
         currentPath.Clear();
+
         pathIndex = 0;
         needsNewPath = true;
         nextPathRetryTime = 0f;
     }
 
-    // ゲーム終了時にAIを停止
+    // =========================================
+    // AI停止
+    // =========================================
+
+    // GameManagerから呼び出される
     public void StopAI()
     {
-        rb.linearVelocity = Vector2.zero;
-        enabled = false;
-    }
-
-    // シーンビューに経路と調査地点を表示
-    private void OnDrawGizmosSelected()
-    {
-        if (!Application.isPlaying)
-            return;
-
-        Gizmos.color = State == KillerState.Chase
-            ? Color.red
-            : Color.cyan;
-
-        Vector3 previous = transform.position;
-
-        for (int i = pathIndex; i < currentPath.Count; i++)
-        {
-            Vector3 point = currentPath[i];
-
-            Gizmos.DrawLine(previous, point);
-            Gizmos.DrawWireSphere(point, 0.12f);
-
-            previous = point;
-        }
-
-        if (State == KillerState.Investigate)
-        {
-            Gizmos.color = Color.yellow;
-
-            Gizmos.DrawWireSphere(
-                lastKnownPosition, 0.35f
-            );
-        }
+        aiStopped = true;
+        ResetPath();
     }
 }
