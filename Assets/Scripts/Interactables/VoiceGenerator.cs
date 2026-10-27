@@ -46,8 +46,6 @@ public class VoiceGenerator : MonoBehaviour
 
     private void Awake()
     {
-        spriteRenderer = GetComponent<SpriteRenderer>();
-        spriteRenderer.color = Color.yellow;
 
         if (progressSlider != null)
         {
@@ -149,7 +147,6 @@ public class VoiceGenerator : MonoBehaviour
         isInteracting = true;
 
         player.SetMovementEnabled(false);
-        spriteRenderer.color = Color.cyan;
 
         if (progressSlider != null)
         {
@@ -177,11 +174,6 @@ public class VoiceGenerator : MonoBehaviour
             player.SetMovementEnabled(true);
         }
 
-        if (!isActivated)
-        {
-            spriteRenderer.color = Color.yellow;
-        }
-
         if (progressSlider != null)
         {
             progressSlider.gameObject.SetActive(false);
@@ -196,8 +188,6 @@ public class VoiceGenerator : MonoBehaviour
         isActivated = true;
 
         StopInteraction();
-
-        spriteRenderer.color = Color.green;
 
         Debug.Log($"{name}: 装置の起動完了");
 

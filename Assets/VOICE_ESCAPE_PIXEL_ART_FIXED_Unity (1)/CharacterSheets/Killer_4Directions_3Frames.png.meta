@@ -1,0 +1,481 @@
+fileFormatVersion: 2
+guid: eaf21e5e462944249b79b7e44e659198
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 8244715426135137097
+    second: Killer_4Directions_3Frames_0
+  - first:
+      213: -3919984364586912450
+    second: Killer_4Directions_3Frames_1
+  - first:
+      213: 3695671507223946948
+    second: Killer_4Directions_3Frames_2
+  - first:
+      213: -2377614440567937686
+    second: Killer_4Directions_3Frames_3
+  - first:
+      213: -7068013219229428941
+    second: Killer_4Directions_3Frames_4
+  - first:
+      213: -6185438399300548966
+    second: Killer_4Directions_3Frames_5
+  - first:
+      213: -1658776300782708268
+    second: Killer_4Directions_3Frames_6
+  - first:
+      213: -1892911420138957940
+    second: Killer_4Directions_3Frames_7
+  - first:
+      213: 2149275745338037519
+    second: Killer_4Directions_3Frames_8
+  - first:
+      213: -7748147176479869218
+    second: Killer_4Directions_3Frames_9
+  - first:
+      213: -4537131214358313565
+    second: Killer_4Directions_3Frames_10
+  - first:
+      213: -9169763133839133896
+    second: Killer_4Directions_3Frames_11
+  - first:
+      213: 6190942690119375334
+    second: Killer_4Directions_3Frames_12
+  - first:
+      213: -5342891494114930895
+    second: Killer_4Directions_3Frames_13
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: Killer_4Directions_3Frames_0
+      rect:
+        serializedVersion: 2
+        x: 20
+        y: 292
+        width: 88
+        height: 114
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 94bd7f86ffc1b6270800000000000000
+      internalID: 8244715426135137097
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Killer_4Directions_3Frames_1
+      rect:
+        serializedVersion: 2
+        x: 156
+        y: 292
+        width: 71
+        height: 110
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e3536b74dfa6999c0800000000000000
+      internalID: -3919984364586912450
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Killer_4Directions_3Frames_2
+      rect:
+        serializedVersion: 2
+        x: 272
+        y: 292
+        width: 95
+        height: 111
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4c6ad92c7a9a94330800000000000000
+      internalID: 3695671507223946948
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Killer_4Directions_3Frames_3
+      rect:
+        serializedVersion: 2
+        x: 394
+        y: 292
+        width: 107
+        height: 112
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a65eb117344010fd0800000000000000
+      internalID: -2377614440567937686
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Killer_4Directions_3Frames_4
+      rect:
+        serializedVersion: 2
+        x: 20
+        y: 148
+        width: 88
+        height: 114
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3339010dc6f59ed90800000000000000
+      internalID: -7068013219229428941
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Killer_4Directions_3Frames_5
+      rect:
+        serializedVersion: 2
+        x: 156
+        y: 149
+        width: 71
+        height: 109
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: a9641a53c88e82aa0800000000000000
+      internalID: -6185438399300548966
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Killer_4Directions_3Frames_6
+      rect:
+        serializedVersion: 2
+        x: 272
+        y: 148
+        width: 96
+        height: 72
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 4d992063eb7daf8e0800000000000000
+      internalID: -1658776300782708268
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Killer_4Directions_3Frames_7
+      rect:
+        serializedVersion: 2
+        x: 300
+        y: 201
+        width: 58
+        height: 63
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c83565ba7170bb5e0800000000000000
+      internalID: -1892911420138957940
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Killer_4Directions_3Frames_8
+      rect:
+        serializedVersion: 2
+        x: 395
+        y: 148
+        width: 105
+        height: 116
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f059c3d27e2c3dd10800000000000000
+      internalID: 2149275745338037519
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Killer_4Directions_3Frames_9
+      rect:
+        serializedVersion: 2
+        x: 20
+        y: 4
+        width: 88
+        height: 114
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ed6b876c13d097490800000000000000
+      internalID: -7748147176479869218
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Killer_4Directions_3Frames_10
+      rect:
+        serializedVersion: 2
+        x: 156
+        y: 4
+        width: 71
+        height: 110
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 3a506d4033fd801c0800000000000000
+      internalID: -4537131214358313565
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Killer_4Directions_3Frames_11
+      rect:
+        serializedVersion: 2
+        x: 272
+        y: 4
+        width: 96
+        height: 72
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 833bb0563057eb080800000000000000
+      internalID: -9169763133839133896
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Killer_4Directions_3Frames_12
+      rect:
+        serializedVersion: 2
+        x: 300
+        y: 57
+        width: 58
+        height: 63
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6e9dd5d5395aae550800000000000000
+      internalID: 6190942690119375334
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: Killer_4Directions_3Frames_13
+      rect:
+        serializedVersion: 2
+        x: 395
+        y: 4
+        width: 105
+        height: 116
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 13fc2d37e7c3ad5b0800000000000000
+      internalID: -5342891494114930895
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      Killer_4Directions_3Frames_0: 8244715426135137097
+      Killer_4Directions_3Frames_1: -3919984364586912450
+      Killer_4Directions_3Frames_10: -4537131214358313565
+      Killer_4Directions_3Frames_11: -9169763133839133896
+      Killer_4Directions_3Frames_12: 6190942690119375334
+      Killer_4Directions_3Frames_13: -5342891494114930895
+      Killer_4Directions_3Frames_2: 3695671507223946948
+      Killer_4Directions_3Frames_3: -2377614440567937686
+      Killer_4Directions_3Frames_4: -7068013219229428941
+      Killer_4Directions_3Frames_5: -6185438399300548966
+      Killer_4Directions_3Frames_6: -1658776300782708268
+      Killer_4Directions_3Frames_7: -1892911420138957940
+      Killer_4Directions_3Frames_8: 2149275745338037519
+      Killer_4Directions_3Frames_9: -7748147176479869218
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
