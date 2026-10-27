@@ -25,6 +25,8 @@ public class LockerHiding : MonoBehaviour
     // 現在使用中のロッカー
     private static LockerHiding activeLocker;
 
+    public bool IsOccupied => activeLocker == this;
+
     // 再生開始時に静的状態を初期化
     [RuntimeInitializeOnLoadMethod(
         RuntimeInitializeLoadType.SubsystemRegistration)]
